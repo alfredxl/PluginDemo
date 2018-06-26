@@ -1,6 +1,7 @@
 package com.bi
 
 import com.android.build.gradle.AppExtension
+import com.android.build.gradle.AppPlugin
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 
@@ -14,7 +15,9 @@ class BiPlugin implements Plugin<Project> {
     @Override
     void apply(Project target) {
         target.logger.info("Bi-Start--------------")
-        AppExtension android1 = target.extensions.getByType(AppExtension)
-        android1.registerTransform(new BiTransform(project))
+//        if (project.plugins.hasPlugin(AppPlugin)) {
+//            AppExtension android1 = target.extensions.getByType(AppExtension)
+//            android1.registerTransform(new BiTransform(project))
+//        }
     }
 }
