@@ -13,7 +13,7 @@ import org.gradle.api.Project
 class BiPlugin implements Plugin<Project> {
     @Override
     void apply(Project project) {
-        target.logger.info("Bi-Start--------------")
+        project.logger.info("Bi-Start--------------")
         def android = project.extensions.findByType(AppExtension.class)
         android.registerTransform(new BiTransform(project))
     }
