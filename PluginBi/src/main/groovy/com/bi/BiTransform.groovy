@@ -63,16 +63,16 @@ class BiTransform extends Transform {
                 FileUtils.copyDirectory(directoryInput.file, dest)
             }
 
-            input.jarInputs.each { JarInput jarInput ->
+/*            input.jarInputs.each { JarInput jarInput ->
                 //TODO 这里可以对input的文件做处理，比如代码注入！
-/*                String jarPath = jarInput.file.absolutePath
+*//*                String jarPath = jarInput.file.absolutePath
                 String projectName = project.rootProject.name
                 if (jarPath.endsWith("classes.jar")
                         && jarPath.contains("exploded-aar\\" + projectName)//这里的路径在我的项目中并不存在, gradle版本不同可能已经不一样了
                         // hotpatch module是用来加载dex，无需注入代码
                         && !jarPath.contains("exploded-aar\\" + projectName + "\\hotpatch")) {
                     Inject.injectJar(jarPath)//调用对jar进行注入的方法
-                }*/
+                }*//*
                 // 重命名输出文件（同目录copyFile会冲突）
                 def jarName = jarInput.name
                 def md5Name = DigestUtils.md5Hex(jarInput.file.getAbsolutePath())
@@ -85,7 +85,7 @@ class BiTransform extends Transform {
                 dest.mkdirs()//需要先创建文件才可以哦
                 dest.createNewFile()
                 FileUtils.copyFile(jarInput.file, dest)
-            }
+            }*/
         }
     }
 }
