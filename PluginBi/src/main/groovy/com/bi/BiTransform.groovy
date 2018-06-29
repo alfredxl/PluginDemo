@@ -47,6 +47,7 @@ class BiTransform extends Transform {
     @Override
     void transform(TransformInvocation transformInvocation) throws TransformException, InterruptedException, IOException {
         ClassPool pool= ClassPool.getDefault()
+        pool.appendClassPath("\\")
         CtClass c = pool.getCtClass("com.aspectj.demo.MainActivity")
         for (int i = 0; i < c.declaredMethods.size(); i++) {
             def method = c.declaredMethods[i]
