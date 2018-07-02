@@ -41,26 +41,26 @@ class MyInject {
                             c.defrost()
                         }
 
-//                        CtConstructor[] cts = c.getDeclaredConstructors()
-//                        if (cts == null || cts.length == 0) {
-//                            //手动创建一个构造函数
-//                            CtConstructor constructor = new CtConstructor(new CtClass[0], c)
-//                            constructor.insertBeforeBody(injectStr)
-//                            c.addConstructor(constructor)
-//                        } else {
-//                            cts[0].insertBeforeBody(injectStr)
-//                        }
-
-                        if (c.name.contains("MainActivity")) {
-                            for (int i = 0; i < c.declaredMethods.size(); i++) {
-                                def method = c.declaredMethods[i]
-                                println(method.name)
-                                if (method.name.contains("toast")){
-                                    method.insertAfter("Toast.makeText(this, \"cccc\", Toast.LENGTH_SHORT).show();")
-                                    println("插入成功")//测试成功的插入代码
-                                }
-                            }
+                        CtConstructor[] cts = c.getDeclaredConstructors()
+                        if (cts == null || cts.length == 0) {
+                            //手动创建一个构造函数
+                            CtConstructor constructor = new CtConstructor(new CtClass[0], c)
+                            constructor.insertBeforeBody(injectStr)
+                            c.addConstructor(constructor)
+                        } else {
+                            cts[0].insertBeforeBody(injectStr)
                         }
+//
+//                        if (c.name.contains("MainActivity")) {
+//                            for (int i = 0; i < c.declaredMethods.size(); i++) {
+//                                def method = c.declaredMethods[i]
+//                                println(method.name)
+//                                if (method.name.contains("toast")){
+//                                    method.insertAfter("Toast.makeText(this, \"cccc\", Toast.LENGTH_SHORT).show();")
+//                                    println("插入成功")//测试成功的插入代码
+//                                }
+//                            }
+//                        }
 
                         c.writeFile(path)
                         c.detach()
