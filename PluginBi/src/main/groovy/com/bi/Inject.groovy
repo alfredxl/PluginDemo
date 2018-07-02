@@ -44,13 +44,9 @@ import org.apache.commons.io.FileUtils
                          && !filePath.contains("BuildConfig.class")
                          // 这里是application的名字，可以通过解析清单文件获得，先写死了
                          && !filePath.contains("App.class")) {
-                     // 这里是应用包名，也能从清单文件中获取，先写死
-//                     int index = filePath.indexOf("com\\fec\\modifymethoddemo")
-//                     if (index != -1) {
                          int end = filePath.length() - 6 // .class = 6
                          String className = filePath.substring(0, end).replace('\\', '.').replace('/', '.')
                          injectClass(className, path)
-//                     }
                  }
              }
          }
