@@ -50,7 +50,7 @@ class BiTransform extends Transform {
         // inputs就是输入文件的集合
         // outputProvider可以获取outputs的路径
         // Transfrom的inputs有两种类型，一种是目录，一种是jar包，要分开遍历
-        inputs.each { TransformInput input ->
+      /*  inputs.each { TransformInput input ->
             input.directoryInputs.each { DirectoryInput directoryInput ->
                 //TODO 这里可以对input的文件做处理，比如代码注入！
                 Inject.injectDir(directoryInput.file.absolutePath)//调用方法进行注入
@@ -84,6 +84,6 @@ class BiTransform extends Transform {
                 dest.createNewFile()
                 FileUtils.copyFile(jarInput.file, dest)
             }
-        }
+        }*/
     }
 }

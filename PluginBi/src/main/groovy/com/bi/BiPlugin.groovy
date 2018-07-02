@@ -15,6 +15,6 @@ class BiPlugin implements Plugin<Project> {
     void apply(Project project) {
         project.logger.info("Bi-Start--------------")
         def android = project.extensions.findByType(AppExtension.class)
-//        android.registerTransform(new BiTransform(project))
+        android.registerTransform(new BiTransform(project))
     }
 }
