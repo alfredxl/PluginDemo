@@ -23,6 +23,20 @@ import org.apache.commons.io.FileUtils
          pool.appendClassPath(libPath)
      }
 
+     static void test(){
+         ClassPool pool = ClassPool.getDefault()
+         CtClass c = pool.get("com.aspectj.demo.MainActivity")
+         for (int i = 0; i < c.declaredMethods.size(); i++) {
+             def method = c.declaredMethods[i]
+             println(method.name)
+             if (method.name.contains("toast")){
+                 method.insertAfter("Toast.makeText(this, \"cccc\", Toast.LENGTH_SHORT).show();")
+                 println("插入成功")//测试成功的插入代码
+             }
+
+         }
+     }
+
      /**
       * 遍历该目录下的所有class，对所有class进行代码注入。
       * 其中以下class是不需要注入代码的：
