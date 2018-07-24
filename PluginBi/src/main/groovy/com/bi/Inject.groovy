@@ -13,29 +13,6 @@ import org.apache.commons.io.FileUtils
  * <br> Date:        2018/6/29 10:57
  */
  class Inject {
-     private static ClassPool pool= ClassPool.getDefault()
-
-     /**
-      * 添加classPath到ClassPool
-      * @param libPath
-      */
-     static void appendClassPath(String libPath) {
-         pool.appendClassPath(libPath)
-     }
-
-     static void test(){
-         ClassPool pool = ClassPool.getDefault()
-         CtClass c = pool.get("com.aspectj.demo.MainActivity")
-         for (int i = 0; i < c.declaredMethods.size(); i++) {
-             def method = c.declaredMethods[i]
-             println(method.name)
-             if (method.name.contains("toast")){
-                 method.insertAfter("Toast.makeText(this, \"cccc\", Toast.LENGTH_SHORT).show();")
-                 println("插入成功")//测试成功的插入代码
-             }
-
-         }
-     }
 
      /**
       * 遍历该目录下的所有class，对所有class进行代码注入。
@@ -45,8 +22,7 @@ import org.apache.commons.io.FileUtils
       * --- 3. Application
       * @param path 目录的路径
       */
-     static void injectDir(String path) {
-         pool.appendClassPath(path)
+     static void injectDir(String path, ClassPool pool) {
          File dir = new File(path)
          if (dir.isDirectory()) {
              dir.eachFileRecurse { File file ->
@@ -60,7 +36,7 @@ import org.apache.commons.io.FileUtils
                          && !filePath.contains("App.class")) {
                          int end = filePath.length() - 6 // .class = 6
                          String className = filePath.substring(0, end).replace('\\', '.').replace('/', '.')
-                         injectClass(className, path)
+                         injectClass(className, path, pool)
                  }
              }
          }
@@ -70,7 +46,7 @@ import org.apache.commons.io.FileUtils
       * 这里需要将jar包先解压，注入代码后再重新生成jar包
       * @path jar包的绝对路径
       */
-     static void injectJar(String path) {
+     static void injectJar(String path, ClassPool pool) {
          if (path.endsWith(".jar")) {
              File jarFile = new File(path)
 
@@ -91,7 +67,7 @@ import org.apache.commons.io.FileUtils
                          && !className.contains('R.class')
                          && !className.contains("BuildConfig.class")) {
                      className = className.substring(0, className.length() - 6)
-                     injectClass(className, jarZipDir)
+                     injectClass(className, jarZipDir, pool)
                  }
              }
 
@@ -103,38 +79,28 @@ import org.apache.commons.io.FileUtils
          }
      }
 
-     private static void injectClass(String className, String path) {
-         println(path)
+     private static void injectClass(String className, String path, ClassPool pool) {
+         println("className  ~~ " + className)
+         pool.clearImportedPackages()
+         pool.importPackage("android.util.Log")
          CtClass c = pool.getCtClass(className)
+         println("CtClass  ~~ " + c.name)
          if (c.isFrozen()) {
              c.defrost()
          }
-         println(className)
-         if (c.name.contains("MainActivity")) {
-             for (int i = 0; i < c.declaredMethods.size(); i++) {
-                 def method = c.declaredMethods[i]
-                 println(method.name)
-                 if (method.name.contains("toast")){
-                     method.insertAfter("Toast.makeText(this, \"cccc\", Toast.LENGTH_SHORT).show();")
-                     println("插入成功")//测试成功的插入代码
-                 }
-
-             }
-         }
-         /*CtConstructor[] cts = c.getDeclaredConstructors()
-
+         CtConstructor[] cts = c.getDeclaredConstructors()
          if (cts == null || cts.length == 0) {
              insertNewConstructor(c)
          } else {
-             cts[0].insertBeforeBody("System.out.println(123123);")
-         }*/
+             cts[0].insertBeforeBody("Log.i(\"javassist : constructor time = \", this.toString());")
+         }
          c.writeFile(path)
          c.detach()
      }
 
      private static void insertNewConstructor(CtClass c) {
          CtConstructor constructor = new CtConstructor(new CtClass[0], c)
-         constructor.insertBeforeBody("System.out.println(321321);")
+         constructor.setBody("Log.i(\"javassist : constructor time = \", this.toString());")
          c.addConstructor(constructor)
      }
 }
