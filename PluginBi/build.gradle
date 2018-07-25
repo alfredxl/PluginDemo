@@ -18,6 +18,6 @@ uploadArchives {
         repository(url: uri('E:\\localGradlePlugin'))
         pom.groupId = 'com.github.alfredxl'//包名
         pom.artifactId = 'testjavassist'//在需要引用插件时用到
-        pom.version = '1.4.9'
+        pom.version = '1.7.3'
     }
 }
