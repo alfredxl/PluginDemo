@@ -104,10 +104,14 @@ class Inject {
             zos = new ZipOutputStream(fos)
             ZipEntry entry = zis.getNextEntry()
             while (entry != null) {
-                if (!entries.contains(entry.getName())) {
-                    entries.add(entry.getName())
-                    zos.putNextEntry(new ZipEntry(entry.getName()))
-                    if ((!entry.isDirectory()) && (entry.getName().endsWith(".class")))
+                String fileName = entry.getName()
+                if (!entries.contains(fileName)) {
+                    entries.add(fileName)
+                    zos.putNextEntry(new ZipEntry(fileName))
+                    if (!entry.isDirectory() && fileName.endsWith(".class")
+                            && !fileName.contains('R$')
+                            && !fileName.contains('R.class')
+                            && !fileName.contains("BuildConfig.class"))
                         transform(zis, zos, project)
                     else {
                         ByteStreams.copy(zis, zos)
