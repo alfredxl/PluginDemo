@@ -45,6 +45,7 @@ class Inject {
      * @param path 目录的路径
      */
     static void injectDir(String inputPath, String outPutPath, Project project) {
+        getClassPool(project).appendClassPath(inputPath)
         File dir = new File(inputPath)
         if (dir.isDirectory()) {
             dir.eachFileRecurse { File file ->
@@ -77,7 +78,7 @@ class Inject {
             if (methods != null && methods.length > 0) {
                 CtMethod item = methods[0]
                 if (item != null && checkMethod(item.getModifiers()) && !item.isEmpty()) {
-                    item.insertBefore("System.out.println(\"javassist : constructor time = \" + " + c.name + ".class.getSimpleName());")
+                    item.insertBefore("System.out.println(\"javassist : toString time = \" + " + c.name + ".class.getSimpleName());")
                 }
             }
             out.write(c.toBytecode())
@@ -91,6 +92,7 @@ class Inject {
     }
 
     static void injectJar(String jarInPath, String jarOutPath, Project project) throws IOException {
+        getClassPool(project).appendClassPath(new JarClassPath(jarInPath))
         ArrayList entries = new ArrayList()
         Files.createParentDirs(new File(jarOutPath))
         FileInputStream fis = null
