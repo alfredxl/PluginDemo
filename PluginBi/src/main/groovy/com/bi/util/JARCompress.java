@@ -37,8 +37,6 @@ public class JARCompress {
             int readLen = 0;
             for (int i = 0; i < fileList.size(); i++) {
                 File f = (File) fileList.get(i);
-                System.out.println("添加: " + f.getPath() + f.getName());
-
                 ze = new JarEntry(getAbsFileName(dir, f));
                 ze.setSize(f.length());
                 ze.setTime(f.lastModified());
@@ -49,7 +47,6 @@ public class JARCompress {
                     zos.write(buf, 0, readLen);
                 }
                 is.close();
-                System.out.println("完成...");
             }
             zos.close();
         } else {

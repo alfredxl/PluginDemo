@@ -59,7 +59,6 @@ public class JARDecompress {
             JarEntry je = (JarEntry) e.nextElement(); //jar中元素条目
             String outFileName = outputPath + je.getName(); //解压文件的名称
             File f = new File(outFileName); //创建解压文件对象
-            System.out.println(f.getAbsolutePath()); //打印绝对路径
             // 创建该路径的目录和所有父目录
             createFatherDir(outFileName);
             // 如果是目录，则直接进入下一个循环
