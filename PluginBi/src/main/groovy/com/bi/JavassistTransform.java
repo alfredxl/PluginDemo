@@ -9,6 +9,7 @@ import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.api.transform.TransformOutputProvider;
 import com.android.build.gradle.internal.pipeline.TransformManager;
+import com.bi.util.AndroidJarPath;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.gradle.api.Project;
@@ -16,7 +17,11 @@ import org.gradle.api.Project;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
+
+import javassist.ClassPool;
 
 
 /**
@@ -61,23 +66,23 @@ public class JavassistTransform extends Transform {
         // 删除上次编译目录
         outputProvider.deleteAll();
         try {
-            // 添加android包
+            ClassPool mClassPool = new ClassPool(ClassPool.getDefault());
+            // 添加android.jar目录
+            mClassPool.appendClassPath(AndroidJarPath.getPath(project));
+            Map<String, String> dirMap = new HashMap<>();
+            Map<String, String> jarMap = new HashMap<>();
             for (TransformInput input : inputs) {
-                // 对所有自己编写的代码进行复制
                 for (DirectoryInput directoryInput : input.getDirectoryInputs()) {
                     // 获取output目录
                     File dest = outputProvider.getContentLocation(directoryInput.getName(),
                             directoryInput.getContentTypes(), directoryInput.getScopes(),
                             Format.DIRECTORY);
-                    // 处理
-                    System.out.println("perform_directory : " + dest.getAbsolutePath());
-                    Inject.injectDir(directoryInput.getFile().getAbsolutePath(), dest.getAbsolutePath(), project);
+                    dirMap.put(directoryInput.getFile().getAbsolutePath(), dest.getAbsolutePath());
+                    mClassPool.appendClassPath(directoryInput.getFile().getAbsolutePath());
                 }
 
-                // 用于保存jar文件夹路径
-                // 复制所有的jar，并解压缩文件
                 for (JarInput jarInput : input.getJarInputs()) {
-                    // 重命名输出文件（同目录copyFile会冲突）
+                    // 重命名输出文件
                     String jarName = jarInput.getName();
                     String md5Name = DigestUtils.md5Hex(jarInput.getFile().getAbsolutePath());
                     if (jarName.endsWith(".jar")) {
@@ -86,15 +91,22 @@ public class JavassistTransform extends Transform {
                     //生成输出路径
                     File dest = outputProvider.getContentLocation(jarName + md5Name,
                             jarInput.getContentTypes(), jarInput.getScopes(), Format.JAR);
-                    // 处理
-                    System.out.println("perform_jar : " + jarInput.getFile().getAbsolutePath());
-                    Inject.injectJar(jarInput.getFile().getAbsolutePath(), dest.getAbsolutePath(), project);
+                    jarMap.put(jarInput.getFile().getAbsolutePath(), dest.getAbsolutePath());
+                    mClassPool.appendClassPath(new JarClassPath(jarInput.getFile().getAbsolutePath()));
                 }
+            }
+            for (Map.Entry<String, String> item : dirMap.entrySet()) {
+                System.out.println("perform_directory : " + item.getKey());
+                Inject.injectDir(item.getKey(), item.getValue(), mClassPool);
+            }
+
+            for (Map.Entry<String, String> item : jarMap.entrySet()) {
+                System.out.println("perform_jar : " + item.getKey());
+                Inject.injectJar(item.getKey(), item.getValue(), mClassPool);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        Inject.clearClassPool();
         System.out.println("JavassistTransform_end...");
     }
 }

@@ -1,6 +1,5 @@
 package com.bi
 
-import com.bi.util.AndroidJarPath
 import com.google.common.io.ByteStreams
 import com.google.common.io.Files
 import javassist.ClassPool
@@ -8,7 +7,6 @@ import javassist.CtClass
 import javassist.CtMethod
 import javassist.Modifier
 import org.apache.commons.io.FileUtils
-import org.gradle.api.Project
 
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
@@ -21,19 +19,18 @@ import java.util.zip.ZipOutputStream
  * <br> Date:        2018/6/29 10:57
  */
 class Inject {
+    private static Map<String, Class> map = new HashMap<>()
 
-    private static ClassPool mClassPool
-
-    private static ClassPool getClassPool(Project project) {
-        if (mClassPool == null) {
-            mClassPool = new ClassPool(ClassPool.getDefault())
-            mClassPool.appendClassPath(AndroidJarPath.getPath(project))
+    private static Class getAnnotationClass(String className, ClassPool mClassPool) {
+        if (!map.containsKey(className)) {
+            CtClass mCtClass = mClassPool.getCtClass(className)
+            if (mCtClass.isFrozen()) {
+                mCtClass.defrost()
+            }
+            map.put(className, mCtClass.toClass())
+            mCtClass.detach()
         }
-        return mClassPool
-    }
-
-    static void clearClassPool() {
-        mClassPool = null
+        return map.get(className)
     }
 
     /**
@@ -44,8 +41,7 @@ class Inject {
      * --- 3. Application
      * @param path 目录的路径
      */
-    static void injectDir(String inputPath, String outPutPath, Project project) {
-        getClassPool(project).appendClassPath(inputPath)
+    static void injectDir(String inputPath, String outPutPath, ClassPool mClassPool) {
         File dir = new File(inputPath)
         if (dir.isDirectory()) {
             dir.eachFileRecurse { File file ->
@@ -59,7 +55,7 @@ class Inject {
                             && !filePath.contains("BuildConfig.class")) {
                         FileInputStream inputStream = new FileInputStream(file)
                         FileOutputStream outputStream = new FileOutputStream(outPutFile)
-                        transform(inputStream, outputStream, project)
+                        transform(inputStream, outputStream, mClassPool)
                     } else {
                         FileUtils.copyFile(file, outPutFile)
                     }
@@ -68,31 +64,7 @@ class Inject {
         }
     }
 
-    static void transform(InputStream input, OutputStream out, Project project) {
-        try {
-            CtClass c = getClassPool(project).makeClass(input)
-            if (c.isFrozen()) {
-                c.defrost()
-            }
-            CtMethod[] methods = c.getDeclaredMethods("toString")
-            if (methods != null && methods.length > 0) {
-                CtMethod item = methods[0]
-                if (item != null && checkMethod(item.getModifiers()) && !item.isEmpty()) {
-                    item.insertBefore("System.out.println(\"javassist : toString time = \" + " + c.name + ".class.getSimpleName());")
-                }
-            }
-            out.write(c.toBytecode())
-            c.detach()
-        } catch (Exception e) {
-            e.printStackTrace()
-            input.close()
-            out.close()
-            throw new RuntimeException(e.getMessage())
-        }
-    }
-
-    static void injectJar(String jarInPath, String jarOutPath, Project project) throws IOException {
-        getClassPool(project).appendClassPath(new JarClassPath(jarInPath))
+    static void injectJar(String jarInPath, String jarOutPath, ClassPool mClassPool) throws IOException {
         ArrayList entries = new ArrayList()
         Files.createParentDirs(new File(jarOutPath))
         FileInputStream fis = null
@@ -114,7 +86,7 @@ class Inject {
                             && !fileName.contains('R$')
                             && !fileName.contains('R.class')
                             && !fileName.contains("BuildConfig.class"))
-                        transform(zis, zos, project)
+                        transform(zis, zos, mClassPool)
                     else {
                         ByteStreams.copy(zis, zos)
                     }
@@ -135,8 +107,59 @@ class Inject {
         }
     }
 
+
+    static void transform(InputStream input, OutputStream out, ClassPool mClassPool) {
+        try {
+            CtClass c = mClassPool.makeClass(input)
+            play(c, mClassPool)
+            out.write(c.toBytecode())
+            c.detach()
+        } catch (Exception e) {
+            e.printStackTrace()
+            input.close()
+            out.close()
+            throw new RuntimeException(e.getMessage())
+        }
+    }
+
+    private static void play(CtClass c, ClassPool mClassPool) {
+        if (!c.getName().startsWith("com.alfredxl")) {
+            return
+        }
+        if (c.isFrozen()) {
+            c.defrost()
+        }
+//        CtMethod[] methods = c.getDeclaredMethods("toString")
+//        if (methods != null && methods.length > 0) {
+//            CtMethod item = methods[0]
+//            if (item != null && checkMethod(item.getModifiers()) && !item.isEmpty()) {
+//                item.insertBefore("System.out.println(\"javassist : toString time = \" + " + c.name + ".class.getSimpleName());")
+//            }
+//        }
+        CtMethod[] methods = c.getDeclaredMethods()
+        if (methods != null && methods.length > 0) {
+            for (CtMethod item : methods) {
+                if (item != null && checkMethod(item.getModifiers())) {
+                    Class a = getAnnotationClass("com.alfredxl.javassistdemo.DemoAnnotation", mClassPool)
+                    Object object = null
+                    try {
+                        object = item.getAnnotation(a)
+                    } catch (ClassNotFoundException e) {
+                        e.printStackTrace()
+                    }
+                    if (object != null) {
+                        String className = a.getMethod("className").invoke(object)
+                        String methodName = a.getMethod("methodName").invoke(object)
+                        item.insertBefore(className + "." + methodName + "(new com.alfredxl.javassistdemo.Point(\$0, \$args));")
+                    }
+                }
+            }
+        }
+    }
+
+
     private static boolean checkMethod(int modifiers) {
-        return Modifier.isPublic(modifiers) && !Modifier.isNative(modifiers) && !Modifier.isAbstract(modifiers) && !Modifier.isEnum(modifiers) && !Modifier.isInterface(modifiers)
+        return !Modifier.isStatic(modifiers) && !Modifier.isNative(modifiers) && !Modifier.isAbstract(modifiers) && !Modifier.isEnum(modifiers) && !Modifier.isInterface(modifiers)
     }
 
 
