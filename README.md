@@ -38,8 +38,8 @@ uploadArchives {
     }
 }
 ```
-* 删除Module下多余的文件和文件夹，保留如下截图的文件结构：<br>
-![演示](20180809100539.png)
+* 删除Module下多余的文件和文件夹，保留如下截图的文件结构：<br><br>
+![演示](20180809100539.png)<br>
 其中图中画红圈的地方的命名将是后面讲到的plugin的名称，后面将会详细讲到，我们打开这个文件，里面会直接链接到你开发的插件类：
 ```groovy
 implementation-class=com.bi.BiPlugin
