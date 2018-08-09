@@ -177,10 +177,58 @@ demo中有这样一个需求，我们看sample中定义了一个注解类PointAn
 
 这个示例本身比较简单，就是在标注有特殊注解的方法上，插入语句，便于项目的隔离；也是AOP概念的体现；
 
-接下来就是在sample中添加这个插件了，插件的添加 需要现在项目的目录gradle下配置仓库地址，并引入包，配置如下:
+插件编写完毕，由于定义本地插件发布，我们可以在右侧的gradle视图中，点击upload发布，如下图：
 
+![发布插件](image/20180809151815.png)
+
+接下来就是在sample中添加这个插件了，插件的添加 需要现在项目的目录gradle下配置仓库地址，并引入包，配置如下:
+```groovy
+buildscript {
+    
+    repositories {
+        google()
+        jcenter()
+        maven {
+            url uri('localGradlePlugin') //仓库地址
+        }
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:3.1.4'
+        classpath 'com.github.alfredxl:testjavassist:1.0.0' // 我们在插件中定义的报名、插件名、版本号
+
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+    }
+}
+```
+
+然后在sample的gradle中添加插件：
+```groovy
+apply plugin: 'my-plugin'
+```
+
+添加完毕，我们同样可以在gradle视图中，去执行测试这个插件：
+
+![测试](image/20180809152045.png)
+
+![测试](image/20180809152215.png)
+
+双击执行，看打印结果
+
+![打印结果](image/20180809152420.png)
+
+我们也可以到sample的build文件夹下查看编译后的代码：
+
+![目录](image/20180809152657.png)
+
+![目录](image/20180809152755.png)
+
+![示例](image/20180809152852.png)
+
+到这里，javassist在Android中的基本使用也就基本结束了。
 
 ## 三、总结：
 
-对于javassist在android中的应用，可以找的资料也不是很多，所以大部分还是要摸石头，这里也只是初步解决了一些问题。  
+对于javassist在android中的应用，可以找的资料也不是很多，所以大部分还是要多参考其它一些优秀的项目，  
+这里提供一个[插件发布平台](https://plugins.gradle.org/)，可以在里面看到一些优秀的项目，本篇就写到这里。 
 email:765947965@qq.com
