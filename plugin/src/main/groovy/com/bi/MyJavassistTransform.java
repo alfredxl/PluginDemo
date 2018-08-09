@@ -31,16 +31,16 @@ import javassist.ClassPool;
  * <br> @author:      谢文良
  * <br> Date:        2018/7/25 14:43
  */
-public class JavassistTransform extends Transform {
+public class MyJavassistTransform extends Transform {
     private Project project;
 
-    public JavassistTransform(Project project) {
+    public MyJavassistTransform(Project project) {
         this.project = project;
     }
 
     @Override
     public String getName() {
-        return "JavassistTransform";
+        return "MyJavassistTransform";
     }
 
     @Override
@@ -60,7 +60,7 @@ public class JavassistTransform extends Transform {
 
     @Override
     public void transform(TransformInvocation transformInvocation) throws IOException {
-        System.out.println("JavassistTransform_start...");
+        System.out.println("MyJavassistTransform_start...");
         Collection<TransformInput> inputs = transformInvocation.getInputs();
         TransformOutputProvider outputProvider = transformInvocation.getOutputProvider();
         // 删除上次编译目录
@@ -107,6 +107,6 @@ public class JavassistTransform extends Transform {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        System.out.println("JavassistTransform_end...");
+        System.out.println("MyJavassistTransform_end...");
     }
 }

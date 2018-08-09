@@ -140,7 +140,7 @@ class Inject {
         if (methods != null && methods.length > 0) {
             for (CtMethod item : methods) {
                 if (item != null && checkMethod(item.getModifiers())) {
-                    Class a = getAnnotationClass("com.alfredxl.javassistdemo.DemoAnnotation", mClassPool)
+                    Class a = getAnnotationClass("com.alfredxl.javassist.sample.PointAnnotation", mClassPool)
                     Object object = null
                     try {
                         object = item.getAnnotation(a)
@@ -150,7 +150,7 @@ class Inject {
                     if (object != null) {
                         String className = a.getMethod("className").invoke(object)
                         String methodName = a.getMethod("methodName").invoke(object)
-                        item.insertBefore(className + "." + methodName + "(new com.alfredxl.javassistdemo.Point(\$0, \$args));")
+                        item.insertBefore(className + "." + methodName + "(new com.alfredxl.javassist.sample.Point(\$0, \$args));")
                     }
                 }
             }

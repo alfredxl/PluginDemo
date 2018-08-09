@@ -2,16 +2,8 @@
 这里主要介绍一些javassist在Android中的基本使用方法，以及一个简单的实例；
 在做这个Demo时，也从网络上获取过相关知识，只是大部分都是copy的，没有很大的参考价值，而且坑也比较多，这里主要就是记录采坑记吧！
 ## 一、准备工作：
-#### 1、新建一个android项目，然后添加一个LibraryModule, 删除app(没什么用)<br>
-#### 2、在项目的根目录下的gradle文件中添加依赖<br>
-```groovy
-dependencies {
-        ...
-        classpath 'com.github.dcendents:android-maven-gradle-plugin:2.0'
-        ...
-    }
-```
-#### 3、在LibraryModule的gradle文件中改成如下代码<br>
+#### 1、新建一个android项目，然后添加一个LibraryModule，我们的插件就在这个module中开发了<br>
+#### 2、在LibraryModule的gradle文件中改成如下代码<br>
 ```groovy
 apply plugin: 'groovy'
 apply plugin: 'maven'
@@ -20,8 +12,9 @@ apply plugin: 'maven'
 dependencies {
     compile gradleApi()
     compile localGroovy()
-    compile 'com.android.tools.build:gradle:2.3.3'
+    compile 'com.android.tools.build:gradle:3.1.4'
     compile 'org.javassist:javassist:3.20.0-GA'
+    // 这里可以添加你如果用到的第三方包
 }
 
 repositories {
@@ -31,52 +24,52 @@ repositories {
 //下面的配置是为了发布到本地，发布到本地主要是测试方便
 uploadArchives {
     repositories.mavenDeployer {
-        repository(url: uri('E:\\localGradlePlugin'))//你要存放的路径
+        repository(url: uri('../localGradlePlugin'))//打包存放的位置，这里存放在Module的同级位置
         pom.groupId = 'com.github.alfredxl'//包名
         pom.artifactId = 'testjavassist'//在需要引用插件时用到
-        pom.version = '1.7.3'
+        pom.version = '1.0.0'//插件版本
     }
 }
 ```
-#### 4、删除Module下多余的文件和文件夹，保留如下截图的文件结构：<br>
+#### 3、删除Module下多余的文件和文件夹，保留如下截图的文件结构：<br>
 
 ![项目结构](20180809100539.png)<br>
 
 其中图中画红圈的地方的命名将是后面讲到的plugin的名称，后面将会详细讲到，我们打开这个文件，里面会直接链接到你开发的插件类：
 ```groovy
-implementation-class=com.bi.BiPlugin
+implementation-class=com.bi.MyPlugin
 ```
-在本例中，插件代码类就是BiPlugin
+在本例中，插件代码类就是MyPlugin
 
 
 ## 二、开发知识：
 #### 1、定义类实现Plugin接口：<br>
 ```groovy
-class BiPlugin implements Plugin<Project> {
+class MyPlugin implements Plugin<Project> {
     @Override
     void apply(Project project) {
 
         def android = project.extensions.findByType(AppExtension.class)
-        android.registerTransform(new JavassistTransform(project))
+        android.registerTransform(new MyJavassistTransform(project))
 
     }
 }
 ```
 
-这里定义了BiPlugin类实现Plugin接口，然后注册Transform，在transform中你就可以做你想做的事情了     
+这里定义了MyPlugin类实现Plugin接口，然后注册Transform，在transform中你就可以做你想做的事情了     
 这里还要提到的就是关于Project，Project大家有必要熟悉下，可以查看[官网](https://docs.gradle.org/current/javadoc/org/gradle/api/Project.html)   
 #### 2、定义类继承Transform：<br>
 ```java
-public class JavassistTransform extends Transform {
+public class MyJavassistTransform extends Transform {
     private Project project;
 
-    public JavassistTransform(Project project) {
+    public MyJavassistTransform(Project project) {
         this.project = project;
     }
 
     @Override
     public String getName() {
-        return "JavassistTransform"; //在Tasks中的名称
+        return "MyJavassistTransform"; //在Tasks中的名称
     }
 
     @Override
@@ -96,7 +89,7 @@ public class JavassistTransform extends Transform {
 
     @Override
     public void transform(TransformInvocation transformInvocation) throws IOException {
-        System.out.println("JavassistTransform_start...");
+        System.out.println("MyJavassistTransform_start...");
         Collection<TransformInput> inputs = transformInvocation.getInputs();
         TransformOutputProvider outputProvider = transformInvocation.getOutputProvider();
         // 删除上次编译目录
@@ -143,7 +136,7 @@ public class JavassistTransform extends Transform {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        System.out.println("JavassistTransform_end...");
+        System.out.println("MyJavassistTransform_end...");
     }
 }
 ```
@@ -163,8 +156,29 @@ public class JavassistTransform extends Transform {
 
 #### 3、定义代码的插入逻辑：<br>
 
-代码的插入，这里推荐[简书文章](https://www.jianshu.com/p/43424242846b)
-里面有许多的语法还是需要注意的，特别是类修改后，一定记得释放，否则下次再修改就会抛异常，具体还是要多写写就熟悉了
+代码的插入，关于javassist的语法这里推荐[简书文章](https://www.jianshu.com/p/43424242846b)
+demo中有这样一个需求，我们看sample中定义了一个注解类PointAnnotation，注解类中主要有className,以及MethodName
+这个className和methodName可以用来组成在注解方法上插入的语句，我们看这个注解类标注的地方的代码块:
+```java
+@PointAnnotation(className = "com.alfredxl.javassist.sample.InsertClass", methodName = "showText")
+    private void setText(String text) {
+        ((TextView) findViewById(R.id.textView)).setText(text);
+    }
+```
+
+在ManActivity类中的一个方法上我们添加了这个注解，根据这个注解的参数，我们最后插入的代码的效果应该如下:
+```java
+@PointAnnotation(className = "com.alfredxl.javassist.sample.InsertClass", methodName = "showText")
+    private void setText(String text) {
+        InsertClass.showText(new Point(this, new Object[]{text}));
+        ((TextView) findViewById(R.id.textView)).setText(text);
+    }
+```
+
+这个示例本身比较简单，就是在标注有特殊注解的方法上，插入语句，便于项目的隔离；也是AOP概念的体现；
+
+接下来就是在sample中添加这个插件了，插件的添加 需要现在项目的目录gradle下配置仓库地址，并引入包，配置如下:
+
 
 ## 三、总结：
 

@@ -1,1 +1,1 @@
-include ':PluginBi'
+include ':plugin', ':sample'

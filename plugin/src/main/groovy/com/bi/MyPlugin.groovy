@@ -10,12 +10,12 @@ import org.gradle.api.Project
  * <br> @author:      谢文良
  * <br> Date:        2018/6/26 14:17
  */
-class BiPlugin implements Plugin<Project> {
+class MyPlugin implements Plugin<Project> {
     @Override
     void apply(Project project) {
 
         def android = project.extensions.findByType(AppExtension.class)
-        android.registerTransform(new JavassistTransform(project))
+        android.registerTransform(new MyJavassistTransform(project))
 
     }
 }
