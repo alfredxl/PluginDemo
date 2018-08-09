@@ -156,7 +156,7 @@ public class MyJavassistTransform extends Transform {
 
 #### 3、定义代码的插入逻辑：<br>
 
-代码的插入，关于javassist的语法这里推荐[简书文章](https://www.jianshu.com/p/43424242846b)
+代码的插入，关于javassist的语法这里推荐[简书文章](https://www.jianshu.com/p/43424242846b)   
 demo中有这样一个需求，我们看sample中定义了一个注解类PointAnnotation，注解类中主要有className,以及MethodName
 这个className和methodName可以用来组成在注解方法上插入的语句，我们看这个注解类标注的地方的代码块:
 ```java
@@ -177,11 +177,11 @@ demo中有这样一个需求，我们看sample中定义了一个注解类PointAn
 
 这个示例本身比较简单，就是在标注有特殊注解的方法上，插入语句，便于项目的隔离；也是AOP概念的体现；
 
-插件编写完毕，由于定义本地插件发布，我们可以在右侧的gradle视图中，点击upload发布，如下图：
+插件编写完毕，由于定义了本地插件发布，我们可以在右侧的gradle视图中，点击upload发布，如下图：
 
 ![发布插件](image/20180809151815.png)
 
-接下来就是在sample中添加这个插件了，插件的添加 需要现在项目的目录gradle下配置仓库地址，并引入包，配置如下:
+接下来就是在sample中添加这个插件了，插件的添加 需要在项目的目录gradle下配置仓库地址，并引入包，配置如下:
 ```groovy
 buildscript {
     
