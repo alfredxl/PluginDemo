@@ -28,7 +28,7 @@ repositories {
     google()
     jcenter()
 }
-//下面的配置是为了发布到本地，发布到本地只要是测试方便
+//下面的配置是为了发布到本地，发布到本地主要是测试方便
 uploadArchives {
     repositories.mavenDeployer {
         repository(url: uri('E:\\localGradlePlugin'))//你要存放的路径
@@ -38,3 +38,4 @@ uploadArchives {
     }
 }
 ```
+删除Module下多余的文件和文件夹，保留如下截图的文件结构：
