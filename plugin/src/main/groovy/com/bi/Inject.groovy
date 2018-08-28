@@ -164,7 +164,7 @@ class Inject {
 
 
     private boolean checkIsARouterMethod(String fileName){
-        Log.isAnnotationPresent()
+//        Log.isAnnotationPresent()
 //        if (className.startsWith(ROUTE_ROOT_PAKCAGE + DOT + SDK_NAME + SEPARATOR + SUFFIX_ROOT)) {
 //            // This one of root elements, load root.
 //            ((IRouteRoot) (Class.forName(className).getConstructor().newInstance())).loadInto(Warehouse.groupsIndex);
@@ -175,6 +175,7 @@ class Inject {
 //            // Load providerIndex
 //            ((IProviderGroup) (Class.forName(className).getConstructor().newInstance())).loadInto(Warehouse.providersIndex);
 //        }
+        return false
     }
 
 }

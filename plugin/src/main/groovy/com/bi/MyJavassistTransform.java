@@ -9,6 +9,7 @@ import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.api.transform.TransformOutputProvider;
 import com.android.build.gradle.internal.pipeline.TransformManager;
+import com.bi.aroter.ARouterCreate;
 import com.bi.util.AndroidJarPath;
 
 import org.apache.commons.codec.digest.DigestUtils;
@@ -71,12 +72,18 @@ public class MyJavassistTransform extends Transform {
             mClassPool.appendClassPath(AndroidJarPath.getPath(project));
             Map<String, String> dirMap = new HashMap<>();
             Map<String, String> jarMap = new HashMap<>();
+            File arouterOut = null;
             for (TransformInput input : inputs) {
                 for (DirectoryInput directoryInput : input.getDirectoryInputs()) {
                     // 获取output目录
                     File dest = outputProvider.getContentLocation(directoryInput.getName(),
                             directoryInput.getContentTypes(), directoryInput.getScopes(),
                             Format.DIRECTORY);
+                    if(arouterOut == null){
+                        arouterOut = outputProvider.getContentLocation(directoryInput.getName(),
+                                directoryInput.getContentTypes(), directoryInput.getScopes(),
+                                Format.DIRECTORY);
+                    }
                     dirMap.put(directoryInput.getFile().getAbsolutePath(), dest.getAbsolutePath());
                     mClassPool.appendClassPath(directoryInput.getFile().getAbsolutePath());
                 }
@@ -91,10 +98,20 @@ public class MyJavassistTransform extends Transform {
                     //生成输出路径
                     File dest = outputProvider.getContentLocation(jarName + md5Name,
                             jarInput.getContentTypes(), jarInput.getScopes(), Format.JAR);
+
+                    if(arouterOut == null){
+                        arouterOut = outputProvider.getContentLocation(jarName + md5Name + 1,
+                                jarInput.getContentTypes(), jarInput.getScopes(), Format.DIRECTORY);
+                    }
                     jarMap.put(jarInput.getFile().getAbsolutePath(), dest.getAbsolutePath());
                     mClassPool.appendClassPath(new JarClassPath(jarInput.getFile().getAbsolutePath()));
                 }
             }
+
+            if(arouterOut != null){
+                ARouterCreate.getInstance().createClass(arouterOut, mClassPool);
+            }
+
             for (Map.Entry<String, String> item : dirMap.entrySet()) {
                 System.out.println("perform_directory : " + item.getKey());
                 Inject.injectDir(item.getKey(), item.getValue(), mClassPool);
@@ -103,6 +120,9 @@ public class MyJavassistTransform extends Transform {
             for (Map.Entry<String, String> item : jarMap.entrySet()) {
                 System.out.println("perform_jar : " + item.getKey());
                 Inject.injectJar(item.getKey(), item.getValue(), mClassPool);
+            }
+            if(arouterOut != null){
+                ARouterCreate.getInstance().writeToFile(arouterOut);
             }
         } catch (Exception e) {
             e.printStackTrace();
