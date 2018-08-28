@@ -7,6 +7,7 @@ import javassist.CtClass
 import javassist.CtMethod
 import javassist.Modifier
 import org.apache.commons.io.FileUtils
+import sun.rmi.runtime.Log
 
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
@@ -19,6 +20,13 @@ import java.util.zip.ZipOutputStream
  * <br> Date:        2018/6/29 10:57
  */
 class Inject {
+    public static final String SDK_NAME = "ARouter"
+    public static final String SEPARATOR = "\$\$"
+    public static final String SUFFIX_ROOT = "Root"
+    public static final String SUFFIX_INTERCEPTORS = "Interceptors"
+    public static final String SUFFIX_PROVIDERS = "Providers"
+    public static final String DOT = "."
+    public static final String ROUTE_ROOT_PAKCAGE = "com.alibaba.android.arouter.routes"
     private static Map<String, Class> map = new HashMap<>()
 
     private static Class getAnnotationClass(String className, ClassPool mClassPool) {
@@ -50,9 +58,7 @@ class Inject {
                     File outPutFile = new File(outPutPath + filePath.substring(inputPath.length()))
                     Files.createParentDirs(outPutFile)
                     if (filePath.endsWith(".class")
-                            && !filePath.contains('R$')
-                            && !filePath.contains('R.class')
-                            && !filePath.contains("BuildConfig.class")) {
+                            && checkIsARouterMethod(fileName)) {
                         FileInputStream inputStream = new FileInputStream(file)
                         FileOutputStream outputStream = new FileOutputStream(outPutFile)
                         transform(inputStream, outputStream, mClassPool)
@@ -82,10 +88,7 @@ class Inject {
                 if (!entries.contains(fileName)) {
                     entries.add(fileName)
                     zos.putNextEntry(new ZipEntry(fileName))
-                    if (!entry.isDirectory() && fileName.endsWith(".class")
-                            && !fileName.contains('R$')
-                            && !fileName.contains('R.class')
-                            && !fileName.contains("BuildConfig.class"))
+                    if (!entry.isDirectory() && checkIsARouterMethod(fileName))
                         transform(zis, zos, mClassPool)
                     else {
                         ByteStreams.copy(zis, zos)
@@ -123,9 +126,6 @@ class Inject {
     }
 
     private static void play(CtClass c, ClassPool mClassPool) {
-        if (!c.getName().startsWith("com.alfredxl")) {
-            return
-        }
         if (c.isFrozen()) {
             c.defrost()
         }
@@ -162,5 +162,19 @@ class Inject {
         return !Modifier.isStatic(modifiers) && !Modifier.isNative(modifiers) && !Modifier.isAbstract(modifiers) && !Modifier.isEnum(modifiers) && !Modifier.isInterface(modifiers)
     }
 
+
+    private boolean checkIsARouterMethod(String fileName){
+        Log.isAnnotationPresent()
+//        if (className.startsWith(ROUTE_ROOT_PAKCAGE + DOT + SDK_NAME + SEPARATOR + SUFFIX_ROOT)) {
+//            // This one of root elements, load root.
+//            ((IRouteRoot) (Class.forName(className).getConstructor().newInstance())).loadInto(Warehouse.groupsIndex);
+//        } else if (className.startsWith(ROUTE_ROOT_PAKCAGE + DOT + SDK_NAME + SEPARATOR + SUFFIX_INTERCEPTORS)) {
+//            // Load interceptorMeta
+//            ((IInterceptorGroup) (Class.forName(className).getConstructor().newInstance())).loadInto(Warehouse.interceptorsIndex);
+//        } else if (className.startsWith(ROUTE_ROOT_PAKCAGE + DOT + SDK_NAME + SEPARATOR + SUFFIX_PROVIDERS)) {
+//            // Load providerIndex
+//            ((IProviderGroup) (Class.forName(className).getConstructor().newInstance())).loadInto(Warehouse.providersIndex);
+//        }
+    }
 
 }

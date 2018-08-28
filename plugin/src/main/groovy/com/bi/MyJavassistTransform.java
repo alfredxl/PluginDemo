@@ -40,7 +40,7 @@ public class MyJavassistTransform extends Transform {
 
     @Override
     public String getName() {
-        return "MyJavassistTransform";
+        return "MyARouterJavassistTransform";
     }
 
     @Override
