@@ -4,6 +4,7 @@ import com.google.common.io.ByteStreams
 import com.google.common.io.Files
 import javassist.ClassPool
 import javassist.CtClass
+import javassist.CtConstructor
 import javassist.CtMethod
 import javassist.Modifier
 import org.apache.commons.io.FileUtils
@@ -49,10 +50,7 @@ class Inject {
                 if (file.isFile()) {
                     File outPutFile = new File(outPutPath + filePath.substring(inputPath.length()))
                     Files.createParentDirs(outPutFile)
-                    if (filePath.endsWith(".class")
-                            && !filePath.contains('R$')
-                            && !filePath.contains('R.class')
-                            && !filePath.contains("BuildConfig.class")) {
+                    if (filePath.endsWith(".class") && isARouterService(file.getName())) {
                         FileInputStream inputStream = new FileInputStream(file)
                         FileOutputStream outputStream = new FileOutputStream(outPutFile)
                         transform(inputStream, outputStream, mClassPool)
@@ -82,10 +80,7 @@ class Inject {
                 if (!entries.contains(fileName)) {
                     entries.add(fileName)
                     zos.putNextEntry(new ZipEntry(fileName))
-                    if (!entry.isDirectory() && fileName.endsWith(".class")
-                            && !fileName.contains('R$')
-                            && !fileName.contains('R.class')
-                            && !fileName.contains("BuildConfig.class"))
+                    if (!entry.isDirectory() && isARouterService(fileName))
                         transform(zis, zos, mClassPool)
                     else {
                         ByteStreams.copy(zis, zos)
@@ -123,37 +118,16 @@ class Inject {
     }
 
     private static void play(CtClass c, ClassPool mClassPool) {
-        if (!c.getName().startsWith("com.alfredxl")) {
+        if (!c.getName().equals("com.alfredxl.aptdemo.arouter.ARouter")) {
             return
         }
         if (c.isFrozen()) {
             c.defrost()
         }
-//        CtMethod[] methods = c.getDeclaredMethods("toString")
-//        if (methods != null && methods.length > 0) {
-//            CtMethod item = methods[0]
-//            if (item != null && checkMethod(item.getModifiers()) && !item.isEmpty()) {
-//                item.insertBefore("System.out.println(\"javassist : toString time = \" + " + c.name + ".class.getSimpleName());")
-//            }
-//        }
-        CtMethod[] methods = c.getDeclaredMethods()
-        if (methods != null && methods.length > 0) {
-            for (CtMethod item : methods) {
-                if (item != null && checkMethod(item.getModifiers())) {
-                    Class a = getAnnotationClass("com.alfredxl.javassist.sample.PointAnnotation", mClassPool)
-                    Object object = null
-                    try {
-                        object = item.getAnnotation(a)
-                    } catch (ClassNotFoundException e) {
-                        e.printStackTrace()
-                    }
-                    if (object != null) {
-                        String className = a.getMethod("className").invoke(object)
-                        String methodName = a.getMethod("methodName").invoke(object)
-                        item.insertBefore(className + "." + methodName + "(new com.alfredxl.javassist.sample.Point(\$0, \$args));")
-                    }
-                }
-            }
+        CtConstructor[] constructors = c.getDeclaredConstructors()
+        if (constructors != null) {
+            constructors[0].setBody("setARouterService(new com.alfredxl.aptdemo.ARouterService());")
+            println("ARouter init is ok")
         }
     }
 
@@ -163,4 +137,7 @@ class Inject {
     }
 
 
+    private static boolean isARouterService(String fileName) {
+        return fileName.endsWith("ARouter.class")
+    }
 }
