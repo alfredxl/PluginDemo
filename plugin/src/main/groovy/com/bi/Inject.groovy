@@ -1,13 +1,12 @@
 package com.bi
 
+import com.bi.aroter.ARouterCreate
 import com.google.common.io.ByteStreams
 import com.google.common.io.Files
 import javassist.ClassPool
 import javassist.CtClass
 import javassist.CtMethod
-import javassist.Modifier
 import org.apache.commons.io.FileUtils
-import sun.rmi.runtime.Log
 
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
@@ -27,19 +26,6 @@ class Inject {
     public static final String SUFFIX_PROVIDERS = "Providers"
     public static final String DOT = "."
     public static final String ROUTE_ROOT_PAKCAGE = "com.alibaba.android.arouter.routes"
-    private static Map<String, Class> map = new HashMap<>()
-
-    private static Class getAnnotationClass(String className, ClassPool mClassPool) {
-        if (!map.containsKey(className)) {
-            CtClass mCtClass = mClassPool.getCtClass(className)
-            if (mCtClass.isFrozen()) {
-                mCtClass.defrost()
-            }
-            map.put(className, mCtClass.toClass())
-            mCtClass.detach()
-        }
-        return map.get(className)
-    }
 
     /**
      * 遍历该目录下的所有class，对所有class进行代码注入。
@@ -58,13 +44,14 @@ class Inject {
                     File outPutFile = new File(outPutPath + filePath.substring(inputPath.length()))
                     Files.createParentDirs(outPutFile)
                     if (filePath.endsWith(".class")
-                            && checkIsARouterMethod(fileName)) {
+                            && checkLogisticsCenter(filePath)) {
                         FileInputStream inputStream = new FileInputStream(file)
                         FileOutputStream outputStream = new FileOutputStream(outPutFile)
                         transform(inputStream, outputStream, mClassPool)
                     } else {
                         FileUtils.copyFile(file, outPutFile)
                     }
+                    checkIsARouterMethod(filePath)
                 }
             }
         }
@@ -88,11 +75,12 @@ class Inject {
                 if (!entries.contains(fileName)) {
                     entries.add(fileName)
                     zos.putNextEntry(new ZipEntry(fileName))
-                    if (!entry.isDirectory() && checkIsARouterMethod(fileName))
+                    if (!entry.isDirectory() && checkLogisticsCenter(fileName))
                         transform(zis, zos, mClassPool)
                     else {
                         ByteStreams.copy(zis, zos)
                     }
+                    checkIsARouterMethod(fileName)
                 }
                 entry = zis.getNextEntry()
             }
@@ -129,53 +117,32 @@ class Inject {
         if (c.isFrozen()) {
             c.defrost()
         }
-//        CtMethod[] methods = c.getDeclaredMethods("toString")
-//        if (methods != null && methods.length > 0) {
-//            CtMethod item = methods[0]
-//            if (item != null && checkMethod(item.getModifiers()) && !item.isEmpty()) {
-//                item.insertBefore("System.out.println(\"javassist : toString time = \" + " + c.name + ".class.getSimpleName());")
-//            }
-//        }
-        CtMethod[] methods = c.getDeclaredMethods()
+        CtMethod[] methods = c.getDeclaredMethods("init")
         if (methods != null && methods.length > 0) {
-            for (CtMethod item : methods) {
-                if (item != null && checkMethod(item.getModifiers())) {
-                    Class a = getAnnotationClass("com.alfredxl.javassist.sample.PointAnnotation", mClassPool)
-                    Object object = null
-                    try {
-                        object = item.getAnnotation(a)
-                    } catch (ClassNotFoundException e) {
-                        e.printStackTrace()
-                    }
-                    if (object != null) {
-                        String className = a.getMethod("className").invoke(object)
-                        String methodName = a.getMethod("methodName").invoke(object)
-                        item.insertBefore(className + "." + methodName + "(new com.alfredxl.javassist.sample.Point(\$0, \$args));")
-                    }
-                }
-            }
+            CtMethod init = methods[0]
+            init.setBody("{mContext = \$1;\nexecutor = \$2;\ncom.alibaba.android.arouter.core.ARouterPathUtil.init();}")
+            println("com.alibaba.android.arouter.core.LogisticsCenter.class insert success")
         }
     }
 
 
-    private static boolean checkMethod(int modifiers) {
-        return !Modifier.isStatic(modifiers) && !Modifier.isNative(modifiers) && !Modifier.isAbstract(modifiers) && !Modifier.isEnum(modifiers) && !Modifier.isInterface(modifiers)
+    private static void checkIsARouterMethod(String fileName) {
+        if (fileName.endsWith(".class")) {
+            fileName = fileName.substring(0, fileName.length() - 6)
+            String classNamePath = fileName.replace("\\", ".").replace("/", ".")
+            String className = classNamePath.substring(classNamePath.lastIndexOf(".") + 1)
+            if (classNamePath.contains(ROUTE_ROOT_PAKCAGE + DOT + SDK_NAME + SEPARATOR + SUFFIX_ROOT)) {
+                ARouterCreate.getInstance().addGroupsIndex(className)
+            } else if (classNamePath.contains(ROUTE_ROOT_PAKCAGE + DOT + SDK_NAME + SEPARATOR + SUFFIX_INTERCEPTORS)) {
+                ARouterCreate.getInstance().addInterceptorsIndex(className)
+            } else if (classNamePath.contains(ROUTE_ROOT_PAKCAGE + DOT + SDK_NAME + SEPARATOR + SUFFIX_PROVIDERS)) {
+                ARouterCreate.getInstance().addProvidersIndex(className)
+            }
+        }
     }
 
-
-    private boolean checkIsARouterMethod(String fileName){
-//        Log.isAnnotationPresent()
-//        if (className.startsWith(ROUTE_ROOT_PAKCAGE + DOT + SDK_NAME + SEPARATOR + SUFFIX_ROOT)) {
-//            // This one of root elements, load root.
-//            ((IRouteRoot) (Class.forName(className).getConstructor().newInstance())).loadInto(Warehouse.groupsIndex);
-//        } else if (className.startsWith(ROUTE_ROOT_PAKCAGE + DOT + SDK_NAME + SEPARATOR + SUFFIX_INTERCEPTORS)) {
-//            // Load interceptorMeta
-//            ((IInterceptorGroup) (Class.forName(className).getConstructor().newInstance())).loadInto(Warehouse.interceptorsIndex);
-//        } else if (className.startsWith(ROUTE_ROOT_PAKCAGE + DOT + SDK_NAME + SEPARATOR + SUFFIX_PROVIDERS)) {
-//            // Load providerIndex
-//            ((IProviderGroup) (Class.forName(className).getConstructor().newInstance())).loadInto(Warehouse.providersIndex);
-//        }
-        return false
+    private static boolean checkLogisticsCenter(String fileName) {
+        return fileName.replace("\\", ".").replace("/", ".").endsWith("com.alibaba.android.arouter.core.LogisticsCenter.class")
     }
 
 }

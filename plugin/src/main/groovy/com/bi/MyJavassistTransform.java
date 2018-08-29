@@ -79,7 +79,7 @@ public class MyJavassistTransform extends Transform {
                     File dest = outputProvider.getContentLocation(directoryInput.getName(),
                             directoryInput.getContentTypes(), directoryInput.getScopes(),
                             Format.DIRECTORY);
-                    if(arouterOut == null){
+                    if (arouterOut == null) {
                         arouterOut = outputProvider.getContentLocation(directoryInput.getName(),
                                 directoryInput.getContentTypes(), directoryInput.getScopes(),
                                 Format.DIRECTORY);
@@ -99,7 +99,7 @@ public class MyJavassistTransform extends Transform {
                     File dest = outputProvider.getContentLocation(jarName + md5Name,
                             jarInput.getContentTypes(), jarInput.getScopes(), Format.JAR);
 
-                    if(arouterOut == null){
+                    if (arouterOut == null) {
                         arouterOut = outputProvider.getContentLocation(jarName + md5Name + 1,
                                 jarInput.getContentTypes(), jarInput.getScopes(), Format.DIRECTORY);
                     }
@@ -108,7 +108,7 @@ public class MyJavassistTransform extends Transform {
                 }
             }
 
-            if(arouterOut != null){
+            if (arouterOut != null) {
                 ARouterCreate.getInstance().createClass(arouterOut, mClassPool);
             }
 
@@ -121,11 +121,12 @@ public class MyJavassistTransform extends Transform {
                 System.out.println("perform_jar : " + item.getKey());
                 Inject.injectJar(item.getKey(), item.getValue(), mClassPool);
             }
-            if(arouterOut != null){
-                ARouterCreate.getInstance().writeToFile(arouterOut);
+            if (arouterOut != null) {
+                ARouterCreate.getInstance().writeToFile();
+                ARouterCreate.reSet();
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new RuntimeException(e.getMessage());
         }
         System.out.println("MyJavassistTransform_end...");
     }
