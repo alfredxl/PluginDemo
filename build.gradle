@@ -5,13 +5,13 @@ buildscript {
     repositories {
         google()
         jcenter()
-        maven {
-            url uri('localGradlePlugin') //仓库地址
-        }
+//        maven {
+//            url uri('localGradlePlugin') //仓库地址
+//        }
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:3.1.4'
-        classpath 'com.github.alfredxl:testjavassist:1.0.0' // 我们在插件中定义的报名、插件名、版本号
+//        classpath 'com.github.alfredxl:testjavassist:1.0.0' // 我们在插件中定义的报名、插件名、版本号
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files

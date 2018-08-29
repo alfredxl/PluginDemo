@@ -13,11 +13,11 @@ repositories {
     google()
     jcenter()
 }
-uploadArchives {
-    repositories.mavenDeployer {
-        repository(url: uri('../localGradlePlugin'))//打包存放的位置，这里存放在Module的同级位置
-        pom.groupId = 'com.github.alfredxl'//包名
-        pom.artifactId = 'testjavassist'//插件名， 在需要引用插件时用到
-        pom.version = '1.0.0'
-    }
-}
+//uploadArchives {
+//    repositories.mavenDeployer {
+//        repository(url: uri('../localGradlePlugin'))//打包存放的位置，这里存放在Module的同级位置
+//        pom.groupId = 'com.github.alfredxl'//包名
+//        pom.artifactId = 'testjavassist'//插件名， 在需要引用插件时用到
+//        pom.version = '1.0.0'
+//    }
+//}
