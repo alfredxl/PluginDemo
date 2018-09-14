@@ -16,5 +16,11 @@ public class MainActivity extends AppCompatActivity {
     @PointAnnotation(className = "com.alfredxl.javassist.sample.InsertClass", methodName = "showText")
     private void setText(String text) {
         ((TextView) findViewById(R.id.textView)).setText(text);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+
+            }
+        }).start();
     }
 }
